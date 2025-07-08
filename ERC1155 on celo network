@@ -1,0 +1,59 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract MyERC1155 is ERC1155, Ownable {
+    uint256 public constant TOKEN_TYPE_1 = 0; // e.g., Sword
+    uint256 public constant TOKEN_TYPE_2 = 1; // e.g., Shield
+
+    uint256 public mintPrice = 0.001 ether; // Price per token
+
+    constructor() ERC1155("https://example.com/tokens/ {id}.json") {}
+
+    /**
+     * @dev Mint tokens to a recipient
+     * @param account Address to mint to
+     * @param id Token ID to mint
+     * @param amount Amount of tokens to mint
+     */
+    function mint(
+        address account,
+        uint256 id,
+        uint256 amount
+    ) public payable {
+        require(msg.value >= mintPrice, "Not enough CELO sent");
+        _mint(account, id, amount, "");
+    }
+
+    /**
+     * @dev Batch mint tokens
+     * @param account Address to mint to
+     * @param ids Array of token IDs
+     * @param amounts Array of amounts for each ID
+     */
+    function batchMint(
+        address account,
+        uint256[] memory ids,
+        uint256[] memory amounts
+    ) public payable {
+        require(msg.value >= mintPrice * ids.length, "Not enough CELO sent");
+        _mintBatch(account, ids, amounts, "");
+    }
+
+    /**
+     * @dev Allows owner to withdraw contract balance
+     */
+    function withdraw() external onlyOwner {
+        payable(owner()).transfer(address(this).balance);
+    }
+
+    /**
+     * @dev See {IERC1155MetadataURI-uri}
+     * Override to provide dynamic metadata URI if needed
+     */
+    function uri(uint256 tokenId) public view override returns (string memory) {
+        return super.uri(tokenId);
+    }
+}
