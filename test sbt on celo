@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.4;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+/**
+ * @title SoulboundToken
+ * @dev Un token no transferible (Soulbound) basado en ERC721.
+ * Una vez asignado a una dirección, ¡se queda ahí para siempre!
+ */
+contract SoulboundToken is ERC721, Ownable {
+    uint256 private _tokenIdCounter;
+
+    constructor() ERC721("Celo Soulbound", "CSB") {}
+
+    /**
+     * @dev Mintea un nuevo token a una dirección específica.
+     * Solo el dueño del contrato puede llamar esto.
+     */
+    function mint(address to) public onlyOwner {
+        uint256 tokenId = _tokenIdCounter;
+        _tokenIdCounter += 1;
+        _safeMint(to, tokenId);
+    }
+
+    /**
+     * @dev Sobrescribe la función de transferencia para hacerla NO OPERATIVA.
+     */
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public pure override {
+        revert("Soulbound: Tokens no pueden ser transferidos");
+    }
+
+    /**
+     * @dev Sobrescribe la función de transferencia segura para hacerla NO OPERATIVA.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public pure override {
+        revert("Soulbound: Tokens no pueden ser transferidos");
+    }
+
+    /**
+     * @dev Permite al dueño quemar (burn) un token si es necesario.
+     */
+    function burn(uint256 tokenId) public {
+        require(ownerOf(tokenId) == msg.sender, "No eres el dueño de este token");
+        _burn(tokenId);
+    }
+}
